@@ -1,9 +1,6 @@
 package br.com.tchars.phold.activities;
 
 import android.Manifest;
-import android.app.Activity;
-import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -12,13 +9,11 @@ import android.graphics.Canvas;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.SeekBar;
@@ -36,8 +31,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import br.com.tchars.phold.R;
 
@@ -76,18 +69,6 @@ public class MainActivity extends AppCompatActivity {
         seekBarNivelDeSaturacao.setMax(100);
         seekBarNivelDeSaturacao.setProgress(50);
 
-        ActivityCompat.requestPermissions(MainActivity.this,
-                new String[] {
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                },
-                1);
-
-        ActivityCompat.requestPermissions(MainActivity.this,
-                new String[] {
-                        Manifest.permission.READ_EXTERNAL_STORAGE
-                },
-                1);
-
         seekBarNivelDeSaturacao.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -108,7 +89,6 @@ public class MainActivity extends AppCompatActivity {
                 Toast.makeText(getApplicationContext(), "Clique na foto para salvar na galeria", Toast.LENGTH_SHORT).show();
             }
         });
-
     }
 
     private void selecionarImagem() {
@@ -119,21 +99,17 @@ public class MainActivity extends AppCompatActivity {
 
         builder.setTitle("Adicionar imagem");
 
-        builder.setItems(opcoes, (dialog, which) ->
-        {
-            if(opcoes[which].equals("Câmera")) {
-                try
-                {
+        builder.setItems(opcoes, (dialog, which) -> {
+            if (opcoes[which].equals("Câmera")) {
+                try {
                     if (ActivityCompat.checkSelfPermission(MainActivity.this,
-                        Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
-                    {
+                        Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
 
                         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                         startActivityForResult(intent, CAMERA_CODE);
 
                     }
-                    else
-                    {
+                    else {
                         /* Exibe a tela para o usuário dar a permissão. */
                         ActivityCompat.requestPermissions(
                                 MainActivity.this,
@@ -149,14 +125,12 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            else if (opcoes[which].equals("Galeria"))
-            {
+            else if (opcoes[which].equals("Galeria")) {
                 Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
                 intent.setType("image/*");
                 startActivityForResult(intent.createChooser(intent, "Selecione uma foto"), GALERIA_CODE);
             }
-            else
-            {
+            else {
                 dialog.dismiss();
             }
         });
@@ -165,10 +139,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
-    {
-        switch(requestCode)
-        {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch(requestCode) {
             case CAMERA_CODE:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
                     Toast.makeText(getApplicationContext(), "Permissão aceita!", Toast.LENGTH_SHORT).show();
@@ -178,28 +150,24 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == CAMERA_CODE)
-        {
+        if (requestCode == CAMERA_CODE) {
             Bundle bundle = data.getExtras();
             bmp = (Bitmap) bundle.get("data");
 
             imagemEscolhida.setImageBitmap(bmp);
-
         }
-        else if (requestCode == GALERIA_CODE)
-        {
+        else if (requestCode == GALERIA_CODE) {
             uriImagemSelecionada = data.getData();
             imagemEscolhida.setImageURI(uriImagemSelecionada);
 
-            try
-            {
+            try {
                 imageStream = getContentResolver().openInputStream(uriImagemSelecionada);
                 bmp = BitmapFactory.decodeStream(imageStream);
             }
-            catch (FileNotFoundException e)
-            {
+            catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
         }
@@ -220,51 +188,30 @@ public class MainActivity extends AppCompatActivity {
         return bitmap;
     }
 
-    private void salvarImagem()
-    {
-        if (bmp == null)
-        {
+    private void salvarImagem() {
+        if (bmp == null) {
             Toast.makeText(getApplicationContext(), "Imagem vazia", Toast.LENGTH_SHORT).show();
             return;
         }
 
         Bitmap matrixAplicada = aplicarMatrix(bmp);
 
-        FileOutputStream outputStream = null;
+        FileOutputStream outputStream;
         File path = Environment.getExternalStoragePublicDirectory(
                 Environment.DIRECTORY_PICTURES);
 
         String nome = String.format("fotoEditada_%d.png", System.currentTimeMillis());
         File outFile = new File(path, nome);
 
-        try
-        {
+        try {
             path.mkdirs();
             outputStream = new FileOutputStream(outFile);
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-
-        matrixAplicada.compress(Bitmap.CompressFormat.PNG, 90, outputStream);
-
-        try
-        {
+            matrixAplicada.compress(Bitmap.CompressFormat.PNG, 90, outputStream);
             outputStream.flush();
-        }
-        catch (Exception e)
-        {
-            e.printStackTrace();
-        }
-
-        try
-        {
             outputStream.close();
             Toast.makeText(getApplicationContext(), "Foto salva!", Toast.LENGTH_SHORT).show();
         }
-        catch (IOException e)
-        {
+        catch (IOException e) {
             e.printStackTrace();
         }
     }
