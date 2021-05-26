@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Phold</string>
+    <string name="ph_old">Ph[Old]</string>
+    <string name="envelhecedor_de_imagens">Envelhecedor de imagens</string>
+    <string name="escolher_foto">Escolher Foto</string>
+    <string name="descricao">ImagemSelecionada</string>
+</resources>
